@@ -1,6 +1,6 @@
 ---
 title: "STAT/MATH 495: Problem Set 10"
-author: "WRITE YOUR NAME(S) HERE"
+author: "Harrison Marick"
 date: "2017-11-28"
 output:
   html_document:
@@ -21,6 +21,7 @@ knitr::opts_chunk$set(echo = TRUE, fig.width=8, fig.height=4.5, message=FALSE, w
 # Collaboration
 
 Please indicate who you collaborated with on this assignment: 
+I ride solo.
 
 
 
@@ -30,6 +31,7 @@ Please indicate who you collaborated with on this assignment:
 library(tidyverse)
 library(broom)
 library(glmnet)
+library(Metrics)
 
 train <- read_csv("data/train.csv")
 test <- read_csv("data/test.csv")
@@ -57,7 +59,32 @@ predictor_matrix_test <- model.matrix(model_formula, data = test)[, -1]
 # Do work and create submission files:
 
 ```{r}
+linear<-lm(model_formula, data=train) #fit linear model
+lambda<-cv.glmnet(x=predictor_matrix_train, y=train$log_price_doc, alpha=1)$lambda.min #find min lambda
+lasso<-glmnet(x=predictor_matrix_train, y=train$log_price_doc, alpha=1, lambda=lambda) #fit lasso with lambda star
 
+test$pred_lin<-exp(predict(linear, test)) #predict with lin model
+test$pred_lasso<-exp(predict(lasso, predictor_matrix_test)) #predict with lasso model 
+
+train$pred_lin<-exp(predict(linear, train)) #predict on training set
+train$pred_lasso<-exp(predict(lasso, predictor_matrix_train)) #predict on training set
+
+sub_linear<-test[,c(1,293)] #create submission linear
+sub_lasso<-test[,c(1,294)]  #create submission lasso
+colnames(sub_linear)[2]="price_doc"
+colnames(sub_lasso)[2]="price_doc"
+
+write.csv(sub_linear, "linear_sub.csv", row.names = FALSE)
+write.csv(sub_lasso, "lasso_sub.csv", row.names=FALSE)
+
+train$pred_lin<-exp(predict(linear, t)) 
+train$pred_lasso<-exp(predict(lasso, predictor_matrix_train))
+
+rmsle_train_lin=rmsle(train$price_doc, train$pred_lin) #rmsle train with linear
+rmsle_train_lin
+
+rmsle_train_lasso=rmsle(train$price_doc, train$pred_lasso) #rmsle train with lasso
+rmsle_train_lasso
 ```
 
 
@@ -72,5 +99,5 @@ in these cells:
 
 Method                | Training Score  | Kaggle Score
 --------------------- | -------------   | -------------
-lm                    |                 |  
-LASSO crossvalidated  |                 |  
+lm                    |     0.2534704   |  2.63413
+LASSO crossvalidated  |     0.4544997   |  0.41917
