@@ -77,7 +77,7 @@ colnames(sub_lasso)[2]="price_doc"
 write.csv(sub_linear, "linear_sub.csv", row.names = FALSE)
 write.csv(sub_lasso, "lasso_sub.csv", row.names=FALSE)
 
-train$pred_lin<-exp(predict(linear, t)) 
+train$pred_lin<-exp(predict(linear, train)) 
 train$pred_lasso<-exp(predict(lasso, predictor_matrix_train))
 
 rmsle_train_lin=rmsle(train$price_doc, train$pred_lin) #rmsle train with linear
